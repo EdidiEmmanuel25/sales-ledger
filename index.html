@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Quick Sales Ledger</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@400;500&family=Schibsted+Grotesk:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<main class="wrap">
+  <header class="top">
+    <div>
+      <h1>Quick Sales Ledger</h1>
+      <p class="date" id="today"></p>
+    </div>
+    <div class="top-right">
+      <button class="eye" id="eye" type="button" aria-pressed="false" title="POS, Transfer and total amounts are hidden until you enter the code">
+        <svg id="ico-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+        <svg id="ico-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19c-6.4 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 5c6.4 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
+        <span id="eye-label">Show payments</span>
+      </button>
+      <span class="sync" id="sync" data-state="connecting" title="">Connecting…</span>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <button class="tab" role="tab" id="tab-sales" type="button" aria-controls="view-sales" aria-selected="true">Sales</button>
+    <button class="tab" role="tab" id="tab-expenses" type="button" aria-controls="view-expenses" aria-selected="false" tabindex="-1">Expenses</button>
+    <button class="tab" role="tab" id="tab-counter" type="button" aria-controls="view-counter" aria-selected="false" tabindex="-1">Counter</button>
+    <button class="tab" role="tab" id="tab-report" type="button" aria-controls="view-report" aria-selected="false" tabindex="-1">Report</button>
+  </nav>
+
+  <!-- SALES -->
+  <div class="view" id="view-sales" role="tabpanel" aria-labelledby="tab-sales">
+    <section class="entry" id="card-sales" aria-label="Record a sale">
+      <form id="form" autocomplete="off" novalidate>
+        <div class="grid">
+          <div class="field">
+            <label for="prefix">ID starts with</label>
+            <div class="combo">
+              <input id="prefix" type="text" inputmode="numeric" role="combobox" aria-expanded="false" aria-controls="prefix-list" aria-autocomplete="list" placeholder="e.g. 4521">
+              <ul id="prefix-list" role="listbox" aria-label="Saved ID starts" hidden></ul>
+            </div>
+          </div>
+          <div class="field">
+            <label for="suffix">Next digits</label>
+            <div class="combo">
+              <input id="suffix" type="text" inputmode="numeric" role="combobox" aria-expanded="false" aria-controls="suffix-list" aria-autocomplete="list" placeholder="e.g. 037">
+              <ul id="suffix-list" role="listbox" aria-label="Next digits" hidden></ul>
+            </div>
+          </div>
+          <div class="field">
+            <label for="amount">Amount (₦)</label>
+            <div class="combo">
+              <input id="amount" type="text" inputmode="decimal" role="combobox" aria-expanded="false" aria-controls="amount-list" aria-autocomplete="list" placeholder="e.g. 2.5k">
+              <ul id="amount-list" role="listbox" aria-label="Amount suggestions" hidden></ul>
+            </div>
+          </div>
+          <div class="field">
+            <label for="method">Payment</label>
+            <div class="combo">
+              <input id="method" type="text" readonly role="combobox" aria-expanded="false" aria-controls="method-list" aria-autocomplete="none" placeholder="POS / Transfer / Cash">
+              <ul id="method-list" role="listbox" aria-label="Payment type" hidden></ul>
+            </div>
+          </div>
+          <div class="record-wrap">
+            <button class="record" id="record" type="button" disabled>Record sale</button>
+          </div>
+        </div>
+
+        <div class="idline">
+          <span class="lbl">Sales ID</span>
+          <output id="idprev" for="prefix suffix"></output>
+          <span class="dupe" id="dupe" role="status" hidden></span>
+        </div>
+        <p class="toast" id="toast-sales" role="status" aria-live="polite"></p>
+        <p class="hints">
+          <kbd>Enter</kbd> next field · <kbd>↑</kbd> <kbd>↓</kbd> browse the list ·
+          type <kbd>2.5k</kbd> for ₦2,500 · <kbd>P</kbd> <kbd>T</kbd> <kbd>C</kbd> pick the payment ·
+          <kbd>Ctrl</kbd>+<kbd>Enter</kbd> records from any field
+        </p>
+      </form>
+    </section>
+
+    <section class="totals" aria-label="Today's totals">
+      <div class="tile" id="tile-POS"><div class="name"><span class="dot" data-m="POS"></span>POS</div><div class="sum" id="sum-POS">₦0</div><div class="cnt" id="cnt-POS">0 sales</div></div>
+      <div class="tile" id="tile-Transfer"><div class="name"><span class="dot" data-m="Transfer"></span>Transfer</div><div class="sum" id="sum-Transfer">₦0</div><div class="cnt" id="cnt-Transfer">0 sales</div></div>
+      <div class="tile" id="tile-Cash"><div class="name"><span class="dot" data-m="Cash"></span>Cash</div><div class="sum" id="sum-Cash">₦0</div><div class="cnt" id="cnt-Cash">0 sales</div></div>
+      <div class="tile total" id="tile-all"><div class="name">All payments</div><div class="sum" id="sum-all">₦0</div><div class="cnt" id="cnt-all">0 sales</div></div>
+    </section>
+
+    <section aria-label="Sales recorded today">
+      <div class="tape-head"><h2>Today's sales</h2><span id="tape-count"></span></div>
+      <p class="empty-state" id="empty">No sales recorded yet today. Fill in the four fields above and press Record sale.</p>
+      <div class="table-wrap" id="table-wrap" hidden>
+        <table>
+          <thead><tr><th>Sales ID</th><th>Payment</th><th class="r">Amount</th><th></th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- EXPENSES -->
+  <div class="view" id="view-expenses" role="tabpanel" aria-labelledby="tab-expenses" hidden>
+    <section class="card" id="card-open" aria-label="Opening change">
+      <h2 class="h2">Opening change</h2>
+      <p class="sub">The cash float in the counter at the start of the day.</p>
+      <div class="row-open">
+        <div class="field">
+          <label for="opening">Opening change (₦)</label>
+          <div class="combo">
+            <input id="opening" type="text" inputmode="decimal" role="combobox" aria-expanded="false" aria-controls="opening-list" aria-autocomplete="list" placeholder="e.g. 20,000">
+            <ul id="opening-list" role="listbox" aria-label="Opening change suggestions" hidden></ul>
+          </div>
+        </div>
+        <button class="record" id="save-opening" type="button" disabled>Save opening change</button>
+      </div>
+      <p class="state" id="opening-state"></p>
+      <button class="link" id="use-yesterday" type="button" hidden></button>
+      <p class="toast" id="toast-open" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" id="card-exp" aria-label="Record an expense">
+      <h2 class="h2">Record an expense</h2>
+      <p class="sub">Cash paid out of the counter today.</p>
+      <div class="grid-exp">
+        <div class="field">
+          <label for="exp-desc">What was it for</label>
+          <div class="combo">
+            <input id="exp-desc" type="text" maxlength="60" role="combobox" aria-expanded="false" aria-controls="exp-desc-list" aria-autocomplete="list" placeholder="e.g. Transport">
+            <ul id="exp-desc-list" role="listbox" aria-label="Expense descriptions" hidden></ul>
+          </div>
+        </div>
+        <div class="field">
+          <label for="exp-amount">Amount (₦)</label>
+          <div class="combo">
+            <input id="exp-amount" type="text" inputmode="decimal" role="combobox" aria-expanded="false" aria-controls="exp-amount-list" aria-autocomplete="list" placeholder="e.g. 1.5k">
+            <ul id="exp-amount-list" role="listbox" aria-label="Amount suggestions" hidden></ul>
+          </div>
+        </div>
+        <button class="record" id="record-exp" type="button" disabled>Record expense</button>
+      </div>
+      <p class="toast" id="toast-exp" role="status" aria-live="polite"></p>
+      <p class="hints"><kbd>Enter</kbd> next field · type <kbd>1.5k</kbd> for ₦1,500 · <kbd>Ctrl</kbd>+<kbd>Enter</kbd> records from any field</p>
+    </section>
+
+    <section class="totals two" aria-label="Today's expense totals">
+      <div class="tile" id="tile-open"><div class="name">Opening change</div><div class="sum" id="sum-open">—</div><div class="cnt" id="cnt-open"></div></div>
+      <div class="tile"><div class="name">Expenses today</div><div class="sum" id="sum-exp">₦0</div><div class="cnt" id="cnt-exp">0 items</div></div>
+    </section>
+
+    <section aria-label="Expenses recorded today">
+      <div class="tape-head"><h2>Today's expenses</h2><span id="exp-count"></span></div>
+      <p class="empty-state" id="exp-empty">No expenses recorded yet today.</p>
+      <div class="table-wrap" id="exp-table-wrap" hidden>
+        <table>
+          <thead><tr><th>Expense</th><th class="r">Amount</th><th></th></tr></thead>
+          <tbody id="exp-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- COUNTER -->
+  <div class="view" id="view-counter" role="tabpanel" aria-labelledby="tab-counter" hidden>
+    <section class="card" aria-label="Money in the counter">
+      <h2 class="h2">Money in the counter</h2>
+      <p class="sub">Opening change + cash sales − expenses, for today.</p>
+      <div class="calc">
+        <div class="crow"><span class="op"></span><span class="cl">Opening change<small id="c-open-note"></small></span><span class="cv" id="c-open">₦0</span></div>
+        <div class="crow"><span class="op">+</span><span class="cl">Cash sales<small id="c-cash-note"></small></span><span class="cv" id="c-cash">₦0</span></div>
+        <div class="crow"><span class="op">−</span><span class="cl">Expenses<small id="c-exp-note"></small></span><span class="cv" id="c-exp">₦0</span></div>
+        <div class="crow result" id="c-result"><span class="op">=</span><span class="cl">In the counter</span><span class="cv" id="c-total">₦0</span></div>
+      </div>
+      <p class="notice" id="c-notice" hidden>
+        <span>Opening change is not set for today, so it counts as ₦0.</span>
+        <button class="link" id="goto-open" type="button">Set opening change</button>
+      </p>
+    </section>
+
+    <section class="card" aria-label="Count check">
+      <h2 class="h2">Count check</h2>
+      <p class="sub">Count the cash in the drawer and enter it to see if it matches. Nothing here is saved.</p>
+      <div class="row-open">
+        <div class="field">
+          <label for="counted">Cash you counted (₦)</label>
+          <div class="combo"><input id="counted" type="text" inputmode="decimal" placeholder="e.g. 93,200"></div>
+        </div>
+      </div>
+      <p class="diff" id="c-diff" role="status"></p>
+    </section>
+  </div>
+
+  <!-- REPORT -->
+  <div class="view" id="view-report" role="tabpanel" aria-labelledby="tab-report" hidden>
+    <section class="card no-print" aria-label="Choose a day to print">
+      <h2 class="h2">Daily report</h2>
+      <p class="sub">Pick a day, check it, then print it. Ctrl+P prints this report from any page.</p>
+      <div class="rep-controls">
+        <div class="field">
+          <label for="rep-date">Day</label>
+          <input class="plain-in" id="rep-date" type="date">
+        </div>
+        <button class="ghost" id="rep-prev" type="button">← Previous</button>
+        <button class="ghost" id="rep-next" type="button">Next →</button>
+        <button class="ghost" id="rep-today" type="button">Today</button>
+      </div>
+      <div class="rep-controls">
+        <div class="field">
+          <label for="shop-name">Shop name on the printout</label>
+          <input class="plain-in" id="shop-name" type="text" maxlength="50" placeholder="e.g. My Shop" autocomplete="off">
+        </div>
+        <button class="record" id="rep-print" type="button">Print report</button>
+      </div>
+      <p class="state" id="rep-hidden-note" hidden>POS and Transfer amounts are hidden, so they print hidden too. Use Show payments at the top first if you want them on paper.</p>
+      <p class="state" id="rep-preview-note" hidden>Printing is turned off in this preview. Open the saved copy of the ledger to print.</p>
+    </section>
+
+    <article class="sheet" id="sheet" aria-label="Daily report">
+      <header class="sheet-head">
+        <h2 id="sheet-shop">Sales ledger</h2>
+        <p id="sheet-date"></p>
+        <p id="sheet-printed"></p>
+      </header>
+
+      <section aria-labelledby="h-pay">
+        <h3 id="h-pay">Payments</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Payment</th><th class="r">Sales</th><th class="r">Amount</th></tr></thead>
+            <tbody id="rep-sum"></tbody>
+            <tfoot><tr><td>All payments</td><td class="c-amt" id="rep-all-n"></td><td class="c-amt" id="rep-all"></td></tr></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="keep" aria-labelledby="h-counter">
+        <h3 id="h-counter">Money in the counter</h3>
+        <div class="calc">
+          <div class="crow"><span class="op"></span><span class="cl">Opening change<small id="rp-open-note"></small></span><span class="cv" id="rp-open">₦0</span></div>
+          <div class="crow"><span class="op">+</span><span class="cl">Cash sales<small id="rp-cash-note"></small></span><span class="cv" id="rp-cash">₦0</span></div>
+          <div class="crow"><span class="op">−</span><span class="cl">Expenses<small id="rp-exp-note"></small></span><span class="cv" id="rp-exp">₦0</span></div>
+          <div class="crow result" id="rp-result"><span class="op">=</span><span class="cl">Should be in the counter</span><span class="cv" id="rp-total">₦0</span></div>
+          <div class="crow blank"><span class="op"></span><span class="cl">Cash counted</span><span class="cv"></span></div>
+          <div class="crow blank"><span class="op"></span><span class="cl">Over or short</span><span class="cv"></span></div>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-sales">
+        <h3 id="h-sales">Sales</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Sales ID</th><th>Payment</th><th class="r">Amount</th></tr></thead>
+            <tbody id="rep-sales"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="h-exp">
+        <h3 id="h-exp">Expenses</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Time</th><th>Expense</th><th class="r">Amount</th></tr></thead>
+            <tbody id="rep-exps"></tbody>
+            <tfoot><tr><td colspan="2">Total expenses</td><td class="c-amt" id="rep-exp-total"></td></tr></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <div class="sign"><div>Prepared by</div><div>Checked by</div></div>
+    </article>
+
+    <section class="card no-print" id="backup-card" aria-label="Backup" hidden>
+      <h2 class="h2">Backup</h2>
+      <p class="sub">Records are kept in this browser on this device. Save a backup file now and then, so nothing is lost if the browser data is cleared.</p>
+      <div class="rep-controls">
+        <button class="ghost" id="backup-save" type="button">Save backup file</button>
+        <button class="ghost" id="backup-restore" type="button">Restore from a backup file</button>
+        <input id="backup-file" type="file" accept="application/json,.json" hidden>
+      </div>
+      <p class="state" id="backup-msg" role="status"></p>
+    </section>
+  </div>
+</main>
+
+<div class="gate" id="gate" hidden>
+  <div class="gate-panel" role="dialog" aria-modal="true" aria-labelledby="gate-title">
+    <h2 id="gate-title">Show payments</h2>
+    <p>Enter the code to see POS, Transfer and total amounts.</p>
+    <input class="codein" id="code" type="password" inputmode="numeric" autocomplete="off" placeholder="Code" aria-label="Code">
+    <p class="gate-err" id="gate-err" role="alert"></p>
+    <div class="gate-actions">
+      <button class="record" id="gate-ok" type="button">Show</button>
+      <button class="ghost" id="gate-cancel" type="button">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
