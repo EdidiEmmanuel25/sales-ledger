@@ -139,16 +139,17 @@
 
   /* ---------- hiding payments ---------- */
   function canSee(m) { return revealed || m === 'Cash'; }
-  function money(m, n) { return canSee(m) ? fmt(n) : MASK; }
+  // Only the POS, Transfer and All payments totals are hidden. Individual sales always show their amounts.
+  function money(m, n) { return fmt(n); }
 
   function renderEye() {
     $('eye').setAttribute('aria-pressed', String(revealed));
-    $('eye-label').textContent = revealed ? 'Hide payments' : 'Show payments';
+    $('eye-label').textContent = revealed ? 'Hide totals' : 'Show totals';
     $('ico-show').hidden = revealed;
     $('ico-hide').hidden = !revealed;
     $('eye').title = revealed
       ? 'POS, Transfer and total amounts are showing. Click to hide them.'
-      : 'POS, Transfer and total amounts are hidden until you enter the code';
+      : 'The POS, Transfer and All payments totals are hidden until you enter the code';
   }
   function setRevealed(v) {
     revealed = v;
@@ -529,7 +530,7 @@
   combos.amount = makeAmountCombo({
     input: amount, list: $('amount-list'), target: 'sales', defaults: DEFAULT_AMOUNTS,
     history: function () {
-      return allSales().filter(function (s) { return canSee(s.method); }).map(function (s) { return s.amount; });
+      return allSales().map(function (s) { return s.amount; });
     },
     next: function () { methodInput.focus(); }
   });
@@ -677,7 +678,7 @@
       chip.appendChild(dot);
       chip.appendChild(document.createTextNode(s.method));
       td2.appendChild(chip);
-      var td3 = el('td', 'c-amt' + (canSee(s.method) ? '' : ' masked'), money(s.method, s.amount));
+      var td3 = el('td', 'c-amt', fmt(s.amount));
       tr.appendChild(td1); tr.appendChild(td2); tr.appendChild(td3); tr.appendChild(deleteCell('sale', s.k, s.id));
       tbody.appendChild(tr);
     });
@@ -866,7 +867,7 @@
       idc.appendChild(el('span', 's', s.suffix));
       tr.appendChild(idc);
       tr.appendChild(el('td', null, s.method));
-      tr.appendChild(el('td', 'c-amt' + (canSee(s.method) ? '' : ' masked'), money(s.method, s.amount)));
+      tr.appendChild(el('td', 'c-amt', fmt(s.amount)));
       sb.appendChild(tr);
     });
     if (!sales.length) sb.appendChild(noneRow(4, 'No sales recorded.'));

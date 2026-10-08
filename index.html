@@ -16,10 +16,10 @@
       <p class="date" id="today"></p>
     </div>
     <div class="top-right">
-      <button class="eye" id="eye" type="button" aria-pressed="false" title="POS, Transfer and total amounts are hidden until you enter the code">
+      <button class="eye" id="eye" type="button" aria-pressed="false" title="The POS, Transfer and All payments totals are hidden until you enter the code">
         <svg id="ico-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
         <svg id="ico-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden><path d="M17.94 17.94A10.9 10.9 0 0 1 12 19c-6.4 0-10-7-10-7a18.5 18.5 0 0 1 5.06-5.94M9.9 4.24A9.1 9.1 0 0 1 12 5c6.4 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/></svg>
-        <span id="eye-label">Show payments</span>
+        <span id="eye-label">Show totals</span>
       </button>
       <span class="sync" id="sync" data-state="connecting" title="">Connecting…</span>
     </div>
@@ -215,7 +215,7 @@
         </div>
         <button class="record" id="rep-print" type="button">Print report</button>
       </div>
-      <p class="state" id="rep-hidden-note" hidden>POS and Transfer amounts are hidden, so they print hidden too. Use Show payments at the top first if you want them on paper.</p>
+      <p class="state" id="rep-hidden-note" hidden>The POS, Transfer and All payments totals are hidden, so they print hidden too. Use Show totals at the top first if you want them on paper. Individual sales always print with their amounts.</p>
       <p class="state" id="rep-preview-note" hidden>Printing is turned off in this preview. Open the saved copy of the ledger to print.</p>
     </section>
 
@@ -288,8 +288,8 @@
 
 <div class="gate" id="gate" hidden>
   <div class="gate-panel" role="dialog" aria-modal="true" aria-labelledby="gate-title">
-    <h2 id="gate-title">Show payments</h2>
-    <p>Enter the code to see POS, Transfer and total amounts.</p>
+    <h2 id="gate-title">Show totals</h2>
+    <p>Enter the code to see the POS, Transfer and All payments totals.</p>
     <input class="codein" id="code" type="password" inputmode="numeric" autocomplete="off" placeholder="Code" aria-label="Code">
     <p class="gate-err" id="gate-err" role="alert"></p>
     <div class="gate-actions">
